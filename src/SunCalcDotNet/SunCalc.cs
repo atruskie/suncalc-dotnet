@@ -225,13 +225,12 @@ namespace SunCalcDotNet
 
 
 
-        // calculates sun times for a given date and latitude/longitude
-
-        public static object GetTimes(DateTimeOffset date, double lat, double lng)
+        /// calculates sun times for a given date and latitude/longitude
+        public static SunTimes GetTimes(DateTimeOffset date, double latitude, double longitude)
         {
 
-            double lw = Rad * -lng,
-                   phi = Rad * lat,
+            double lw = Rad * -longitude,
+                   phi = Rad * latitude,
                    d = ToDays(date),
                    n = JulianCycle(d, lw),
                    ds = ApproxTransit(0, lw, n),
