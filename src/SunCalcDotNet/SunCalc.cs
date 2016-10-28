@@ -153,7 +153,7 @@ namespace SunCalcDotNet
 
         #endregion
 
-        public static object GetPosition(DateTimeOffset date, double latitude, double longitude)
+        public static Position GetPosition(DateTimeOffset date, double latitude, double longitude)
         {
             var lw = Rad * -longitude;
             var phi = Rad * latitude;
@@ -288,10 +288,10 @@ namespace SunCalcDotNet
             distance = dt;
         }
 
-        public static MoonPosition GetMoonPosition(DateTimeOffset date, double lat, double lng)
+        public static MoonPosition GetMoonPosition(DateTimeOffset date, double latitude, double longitude)
         {
-            double lw = Rad * -lng;
-            double phi = Rad * lat;
+            double lw = Rad * -longitude;
+            double phi = Rad * latitude;
             double d = ToDays(date);
 
             double rightAscension;
@@ -320,7 +320,7 @@ namespace SunCalcDotNet
         /// calculations for illumination parameters of the moon,
         /// based on http://idlastro.gsfc.nasa.gov/ftp/pro/astro/mphase.pro formulas and
         /// Chapter 48 of "Astronomical Algorithms" 2nd edition by Jean Meeus (Willmann-Bell, Richmond) 1998.
-        public static object GetMoonIllumination(DateTimeOffset date)
+        public static MoonIllumination GetMoonIllumination(DateTimeOffset date)
         {
 
             var d = ToDays(date);
@@ -359,29 +359,21 @@ namespace SunCalcDotNet
         }
 
         /// calculations for moon rise/set times are based on http://www.stargazing.net/kepler/moonrise.html article
-        public static object GetMoonTimes(DateTimeOffset date, double lat, double lng, bool inUTC)
+        public static MoonTimes GetMoonTimes(DateTimeOffset date, double latitude, double longitude)
         {
-            // implementer's note: the inUTC option seems redundant - consider removing
-
             DateTimeOffset t = date;
-            if (inUTC)
-            {
-                t = t.UtcDateTime;
-            }
-
             t = t - t.TimeOfDay;
 
-
             var hc = 0.133 * Rad;
-            var h0 = GetMoonPosition(t, lat, lng).Altitude - hc;
+            var h0 = GetMoonPosition(t, latitude, longitude).Altitude - hc;
             double h1, h2, a, b, xe, ye = 0, d, x1 = 0, x2 = 0, dx;
             double? rise = null, set = null;
 
             // go in 2-hour chunks, each time seeing if a 3-point quadratic curve crosses zero (which means rise or set)
             for (var i = 1; i <= 24; i += 2)
             {
-                h1 = GetMoonPosition(HoursLater(t, i), lat, lng).Altitude - hc;
-                h2 = GetMoonPosition(HoursLater(t, i + 1), lat, lng).Altitude - hc;
+                h1 = GetMoonPosition(HoursLater(t, i), latitude, longitude).Altitude - hc;
+                h2 = GetMoonPosition(HoursLater(t, i + 1), latitude, longitude).Altitude - hc;
 
                 a = (h0 + h2) / 2 - h1;
                 b = (h2 - h0) / 2;
@@ -434,6 +426,7 @@ namespace SunCalcDotNet
 
                 h0 = h2;
             }
+
 
             var result = new MoonTimes(
                 rise.HasValue ? HoursLater(t, rise.Value) : (DateTimeOffset?)null,
